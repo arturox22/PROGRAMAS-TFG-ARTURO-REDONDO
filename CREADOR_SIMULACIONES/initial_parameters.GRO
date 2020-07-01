@@ -1,0 +1,66 @@
+
+//#################################################
+//############# INITIAL PARAMETERS ################
+//#################################################
+
+include gro_elegro1-2-3
+set_theme(dark_theme);
+set ("dt", 0.1);
+set ("population_max", 90000);
+set ("signals", 1.0); //0.0: off, 1.0: on
+set ("signals_draw", 0.0); //0.0: off, 1.0: on
+set ("seed", 22);
+
+grid(2001, 5, 0);
+
+
+
+//-------------------------------------------------------
+
+//#################################################
+//############## GLOBAL VARIABLES #################
+//#################################################
+
+// *** Signals ***
+diff := 0.6;
+deg := 0.3;
+k_pad := 10.0;
+
+
+// *** Metabolism Variables ***
+threshold_up := 0.04;
+signal_emission := 1.2;
+
+
+// *** Color parameters ***
+color_intensity := 500;
+delta_on := 0;
+reverse_on := 0;
+
+
+// *** Strain Parameters ***
+met_growth_on := 1;
+base_growth := 0.034657;
+
+
+// *** Replating Parameters ***
+survivors := 0.9;
+survivors_variability := 0.0;
+replate_timing := [ output_time_start := 180.0, output_time_stop := 10000.0, period := -1 ];
+// replate en min 180 ~ 9 generaciones ~ 25600 células 
+
+// *** Output parameters ***
+output_path := "C:\output_GRO\";
+// escribir la ruta en la que se almacenarán los outputs (csv) de gro
+pop_level := 1;
+output_timing := [ output_time_start := 0.0, output_time_stop := 1000000.0, period := 10 ];
+
+
+// *** Ecolis function ***
+x_position := 0.0;
+y_position := 0.0;
+num_cells := 10;
+radious := 300.0;
+
+
+// *** Interaction Forces ***

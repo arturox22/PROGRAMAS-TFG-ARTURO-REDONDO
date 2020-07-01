@@ -1,0 +1,187 @@
+
+//#################################################
+//############# INITIAL PARAMETERS ################
+//#################################################
+
+include gro_elegro1-2-3
+set_theme(dark_theme);
+set ("dt", 0.1);
+set ("population_max", 2000);
+set ("signals", 1.0); //0.0: off, 1.0: on
+set ("signals_draw", 0.0); //0.0: off, 1.0: on
+
+
+grid(2001, 5, 0);
+
+
+
+//-------------------------------------------------------
+
+//#################################################
+//############## GLOBAL VARIABLES #################
+//#################################################
+
+// *** Signals ***
+diff := 0.6;
+deg := 0.3;
+k_pad := 10.0;
+
+
+// *** Metabolism Variables ***
+threshold_up := 0.034657;
+signal_emission := 0.5;
+
+
+// *** Color parameters ***
+color_intensity := 500;
+delta_on := 0;
+reverse_on := 0;
+
+
+// *** Strain Parameters ***
+met_growth_on := 1;
+base_growth := 0.034657;
+
+
+// *** Ecolis function ***
+x_position := 0.0;
+y_position := 0.0;
+num_cells := 10;
+radious := 250.0;
+
+
+// *** Interaction Forces ***
+f_pos := 1;
+f_neg := -1;
+
+
+//-------------------------------------------------------
+               
+//#################################################
+//##################   SIGNAL   ###################
+//#################################################
+
+
+signal([ name := "A", kdiff := diff, kdeg := deg, pad := k_pad ]);
+signal([ name := "B", kdiff := diff, kdeg := deg, pad := k_pad ]);
+
+
+
+
+
+//-------------------------------------------------------
+               
+//#################################################
+//##################   GATES   ####################
+//#################################################
+
+
+gate([ name := "gaTrue", function := "TRUE", input := {} ]);
+gate([ name := "gaStrain1", function := "YES", input := {"Strain1"}  ]);
+gate([ name := "gaStrain2", function := "YES", input := {"Strain2"}  ]);
+
+
+
+    
+    
+//-------------------------------------------------------           
+    
+
+//#################################################
+//###############   METABOLISM   ##################
+//#################################################
+
+
+
+metabolism ([name := "metStrain1",
+			gate := "gaStrain1",
+			metabolites := {"A", "B"},
+			fluxes := {"Aout", "Bin", "biomass"},
+
+			Aout := [metabolite := "A", f := [ bias := signal_emission ] ],
+
+			Bin := [metabolite := "B", f := [ bias := -threshold_up] ],
+
+			biomass := [ metabolite := "biomass", f := [ fluxes := {"Bin"}, fluxes_w := {-f_pos}, bias := 0.0] ]
+]);
+
+
+metabolism ([name := "metStrain2",
+			gate := "gaStrain2",
+			metabolites := {"B"},
+			fluxes := {"Bout", "biomass"},
+
+			Bout := [metabolite := "B", f := [ bias := signal_emission ] ]
+			
+			
+			//biomass := [ metabolite := "biomass", f := [ bias := base_growth ] ]
+
+			]);
+
+
+
+
+//-------------------------------------------------------
+               
+//#################################################
+//##################   COLOR   ####################
+//#################################################
+
+
+color([ gate := "gaStrain1", channels := {color_intensity,0,0,0}, delta := delta_on, reverse := reverse_on ]);
+color([ gate := "gaStrain2", channels := {0,color_intensity,0,0}, delta := delta_on, reverse := reverse_on ]);
+
+
+//-------------------------------------------------------
+               
+//#################################################
+//#################   STRAIN   ####################
+//#################################################
+
+
+strain([ name := "Strain1", cell_growth := [ base_growth_rate_rdn := [ dist_params := {0.034657, 0.0} ], metabolism_growth := met_growth_on ] ]);
+strain([ name := "Strain2", cell_growth := [ base_growth_rate_rdn := [ dist_params := {0.034657, 0.0} ], metabolism_growth := met_growth_on ] ]);
+
+
+/*
+strain([ name := "Strain1", cell_growth := [ base_growth_rate := base_growth , metabolism_growth := met_growth_on ] ]);
+strain([ name := "Strain2", cell_growth := [ base_growth_rate := base_growth, metabolism_growth := met_growth_on ] ]);
+*/
+
+
+// ====================== 
+//|   LOAD INSTRUCTION   |
+// ======================
+
+load_gen([ auto_gates := 0 ]);
+
+
+//-------------------------------------------------------
+
+//#################################################
+//############ PROGRAM INSTRUCTIONS ###############
+//#################################################
+
+program p() := 
+{
+	selected: {die(); }
+    skip();
+};
+
+program main() :=
+{
+	skip();
+};
+
+
+
+//-------------------------------------------------------
+               
+//#################################################
+//##################   ECOLIS   ###################
+//#################################################
+
+
+ecolis( [ num := num_cells, x := x_position, y := y_position, r := radious , strain := "Strain1", plasmids := {}, molecules := {}, mode := "default" ], program p());
+ecolis( [ num := num_cells, x := x_position, y := y_position, r := radious , strain := "Strain2", plasmids := {}, molecules := {}, mode := "default" ], program p());
+//ecolis( [ num := num_cells, x := x_position, y := y_position, r := radious , strain := "Strain3", plasmids := {}, molecules := {}, mode := "default" ], program p());
