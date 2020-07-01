@@ -1,0 +1,53 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Script que grafica las curvas de densidad poblacional de las cepas.
+
+# Este archivo . Rmd debe estar en la misma carpeta en la que se encuentren los archivos .csv (ouput de gro)
+
+```{r}
+
+setwd("C:/output_GRO_graphics")
+
+archivos = list.files("c:/output_GRO_graphics/")
+
+for (f in 2:length(archivos)){
+  #este bucle for empieza en 2 porque el primer elemento es este archivo .Rmd (por eso se llama aaaPLOTEADOR)
+  
+  # Con este bucle se divide el nº de bacterias de cada cepa entre el total de bacterias para cada minuto que 
+  # ha sido simulado; en otras palabras, se calcula la densidad poblacional de cada cepa por cada minuto 
+  # simulado
+  
+  df=read.csv(archivos[f])
+  for (i in 1:length(df$time)){
+    total=sum(df[i,2:6])
+    df[i,2:6]= df[i,2:6]/total
+  }
+  
+  
+  
+  # Con estas líneas de código se grafica la densidad poblacional y la gráfica generada se guarda como una   
+  # foto (formato .jpg)
+  
+  jpeg(paste(gsub(".csv","", archivos[f]),".jpg",sep=""), quality = 2500, width = 420, height = 650)
+
+  plot(df$time,df$molecule_Strain1, xlim=NULL, ylim=c(0,0.35), xlab="Time(s)", ylab="Strains",type="l", lty=1, pch=5, col="blue", main=gsub(".csv","", archivos[f]))
+  lines(df$time,df$molecule_Strain2, type="l", lty=1, pch=5, col="green3")
+  lines(df$time,df$molecule_Strain3, type="l", lty=1, pch=5, col="gold")
+  lines(df$time,df$molecule_Strain4, type="l", lty=1, pch=5, col="deeppink1")
+  lines(df$time,df$molecule_Strain5, type="l", lty=1, pch=5, col="red")
+  legend(x=0,y=0.12,legend = c("Strain 1","Strain 2","Strain 3", "Strain 4", "Strain 5"),      
+         fill=c("blue","green3", "gold", "deeppink1", "red"),bg="white")
+  
+  dev.off()
+  
+}
+
+```
+

@@ -1,0 +1,93 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Script que primero calcula las curvas de densidad poblacional de cada cepa y acto seguido, selecciona los últimos 50 minutos simulados y calcula la pendiente de la recta de regresión asociada a esos puntos de la curva. En base al valor de estas pendientes, imponiendo un valor límite (cutoff) clasifica cada consorcio en estable o inestable (si hay alguna cepa cuya pendiente sea superior al cutoff, el consorcio entero se clasifica como inestable). El output que genera es un archivo .csv (ESTABILIDAD_EXPERIMENTOS.csv) en el que se indica que si los consorcios son estables o no.
+
+# Este script (archivo .Rmd) debe estar en la misma carpeta que los archivos .csv (output de gro)
+
+
+```{r}
+
+setwd("C:/output_GRO_pendiente")
+
+archivos = list.files("c:/output_GRO_pendiente/")
+
+
+#generación de un data-frame formado por dos columnas: 1º archivo - 2º ¿Archivo estable? Si /No
+stability=data.frame(rep(0,(length(archivos)-1)),rep(0,(length(archivos)-1)))
+colnames(stability)=c("file","stable?")
+
+
+
+for (num_f in 1:(length(archivos)-1)){
+  #length(archivos)-1 --> el ultimo archivo es el Rmd
+  
+  name_file =gsub(".csv","", archivos[num_f])
+  
+  #Bucle con el que se calculan las curvas de densidad poblacional
+  df=read.csv(archivos[num_f])
+  for (i in 1:length(df$time)){
+    total=sum(df[i,2:6])
+    df[i,2:6]= ((df[i,2:6]/total)*100)
+  } 
+  
+  #Selección de los último 50 minutos de simulación
+  df_long=length(df$time)
+  df_last50= (length(df$time)-49)
+  
+  time50 = df$time[df_last50:df_long]
+  strain1_50 = df$molecule_Strain1[df_last50:df_long]
+  strain2_50 = df$molecule_Strain2[df_last50:df_long]
+  strain3_50 = df$molecule_Strain3[df_last50:df_long]
+  strain4_50 = df$molecule_Strain4[df_last50:df_long]
+  strain5_50 = df$molecule_Strain5[df_last50:df_long]
+  
+  #Cálculo de la pediente de la recta de regresión de los últimos 50 minutos simulados
+  # Se almacena la pendiente de cada cepa en el vector m.  
+  m1 = lm(strain1_50 ~ time50)$coeff[[2]]
+  m2 = lm(strain2_50 ~ time50)$coeff[[2]]
+  m3 = lm(strain3_50 ~ time50)$coeff[[2]]
+  m4 = lm(strain4_50 ~ time50)$coeff[[2]]
+  m5 = lm(strain5_50 ~ time50)$coeff[[2]]
+  
+  m=c(m1,m2,m3,m4,m5)
+  ctes=rep(0,5)
+  
+  #Definición del cutoff 
+  cutoff=0.025 
+  
+  
+  #Clasificación de los consorcios en estables o no según el cutoff 
+  
+  
+  # 1º Se compara los valores de las pendientes del vector m con el cutoff y en el vector ctes se guarda: 
+  # si (el valor absoluto de la pendiente es menor que el cutoff) o no (el valor abosoluto de la pendiente es   # mayor que el cutoff)
+  
+  for (num_strain in 1:5){
+    if(abs(m[num_strain])<=cutoff){ctes[num_strain]="si"}
+    else{ctes[num_strain]="no"}
+  }
+  
+  
+  # 2º Se recorre el vector ctes y si hay algún no, el consorcio se clasifica como inestable.
+  stb="si"
+  for(num in 1:5){
+    if(ctes[num]=="no"){
+      stb="no"
+      break}
+  }
+  
+  stability[num_f, ]=c(name_file,stb)
+    
+}
+
+# Los Clasificación final se escribe en un archivo con formato .csv
+write.csv(stability, file = "ESTABILIDAD_EXPERIMENTOS.csv", row.names = FALSE)
+
+```
